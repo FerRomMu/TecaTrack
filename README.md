@@ -1,5 +1,9 @@
 # Documentación TecaTrack
 
+<p align="center">
+  <img src="assets/app-icon.png" alt="TecaTrack Logo" width="350"/>
+</p>
+
 **Introducción**  
 Problema que resuelve y usuario al que esta dirigido.
 
