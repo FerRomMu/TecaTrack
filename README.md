@@ -59,7 +59,7 @@ _(Empty for now)_
 | Frontend UI    | Ant Design (AntD)       | Avoid coding CSS and speed up the creation of styles |
 | Backend        | Python, FastAPI         | Robust business logic and rapid API creation         |
 | Database       | PostgreSQL, Alembic     | Relational data persistence and secure migrations    |
-| Infrastructure | asyncpg                 | Asynchronous database connection                     |
+| Infrastructure | PaddleOCR               | Optical Character Recognition (OCR) to extract data from receipts |
 
 ---
 
