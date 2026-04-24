@@ -9,9 +9,9 @@ TecaTrack is an application designed for managing receipts and financial transac
 
 ---
 
-## MVP
+## Demo version
 
-### Minimum Features:
+### Features:
 
 - **Receipt Upload**: Ability for the user to upload images of their receipts.
 - **OCR Processing**: Extraction of key data from the receipt image.
@@ -53,12 +53,12 @@ _(Empty for now)_
 
 ## Technologies Used
 
-| Component      | Technology              | Reason                                               |
-| -------------- | ----------------------- | ---------------------------------------------------- |
-| Frontend       | React, Vite, TypeScript | Dynamic interface development and strict typing      |
-| Frontend UI    | Ant Design (AntD)       | Avoid coding CSS and speed up the creation of styles |
-| Backend        | Python, FastAPI         | Robust business logic and rapid API creation         |
-| Database       | PostgreSQL, Alembic     | Relational data persistence and secure migrations    |
+| Component      | Technology              | Reason                                                            |
+| -------------- | ----------------------- | ----------------------------------------------------------------- |
+| Frontend       | React, Vite, TypeScript | Dynamic interface development and strict typing                   |
+| Frontend UI    | Ant Design (AntD)       | Avoid coding CSS and speed up the creation of styles              |
+| Backend        | Python, FastAPI         | Robust business logic and rapid API creation                      |
+| Database       | PostgreSQL, Alembic     | Relational data persistence and secure migrations                 |
 | Infrastructure | PaddleOCR               | Optical Character Recognition (OCR) to extract data from receipts |
 
 ---
