@@ -72,7 +72,7 @@ The system follows a client-server architecture:
 - **Receipt**: Processed receipt linking user and file. Tracks OCR status and stored extracted data.
 - **Transaction**: Monetary movement linking sender, receiver, source/destination accounts, and the receipt.
 
-### Database schema
+## Database schema
 
 ![Database schema](./assets/db-schema.png)
 
