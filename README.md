@@ -5,49 +5,48 @@
 </p>
 
 **Introduction**  
-TecaTrack is an application designed for managing receipts and financial transactions using OCR (Optical Character Recognition) technology. Currently, the project is in a Proof of Concept (PoC) phase, specifically focused on processing receipts from Brunbank. The main objective is to extract structured information from receipt images and automatically map it to user accounts.
+TecaTrack is an application designed for managing receipts and financial transactions using OCR (Optical Character Recognition) technology. Currently in a Proof of Concept (PoC) phase focusing on processing receipts from Brunbank, its main objective is to extract structured information from receipt images and automatically map it to user accounts.
 
 ---
 
-## Demo version
+### Repositories
 
-### Features:
+This repository is the documentation hub for the TecaTrack ecosystem. Source code lives in the frontend/backend repos.
 
-- **Receipt Upload**: Ability for the user to upload images of their receipts.
-- **OCR Processing**: Extraction of key data from the receipt image.
-- **Receipt Mapping**: Automatic association of the extracted data and updating of funds.
-- **Balance Dashboard**: Visualization of the total balance (the sum of all user accounts) alongside the individual balance of each account, handled directly from the frontend with data obtained from the backend.
-
-These features constitute the core of the system by demonstrating the feasibility of data extraction via OCR and the automatic synchronization of balances without the need for manual entry by the user.
+- [TecaTrack (Main)](https://github.com/FerRomMu/TecaTrack): Central wiki, documentation, and technical reports.
+- [TecaTrack-Frontend](https://github.com/FerRomMu/TecaTrack-Frontend): User interface, components, and API integration.
+- [TecaTrack-Backend](https://github.com/FerRomMu/TecaTrack-Backend): REST API, business logic, OCR integration, and database interaction.
 
 ---
 
-## Premises/Requirements
+## Features
 
-Assumptions considered during the development of this PoC:
+- **Receipt Upload**: Upload images of receipts easily.
+- **OCR Processing**: Automatic extraction of key data from receipt images.
+- **Receipt Mapping**: Automatic association of extracted data and updating of funds.
+- **Balance Dashboard**: Visualization of total and individual account balances.
 
-- **No Authentication (Login)**: There is no login flow in this PoC. Users are added manually to the database. The frontend determines which user to query using an environment variable (`.env`) that contains the active user's email.
-- **OCR Scope**: The system is exclusively designed to process receipts from Brunbank.
-- **User Identity**: Users are required to have a valid Argentine CUIL number.
+---
+
+## Premises and Requirements
+
+- **No Authentication**: The PoC uses manual user entry. The active user is determined by an environment variable in the frontend.
+- **OCR Scope**: Designed exclusively for Brunbank receipts.
+- **User Identity**: Users must have a valid Argentine CUIL number.
 
 ---
 
 ## Architecture
 
-The system follows a traditional client-server architecture, clearly separating responsibilities between the frontend and the backend.
+The system follows a client-server architecture:
 
-- **Decoupled Frontend**: Single Page Application (SPA) developed with React and Vite.
-- **Backend as REST API**: Developed in Python using the FastAPI framework.
-- **Data Persistence**: PostgreSQL relational database.
+- **Frontend**: Single Page Application (SPA) developed with React and Vite.
+- **Backend**: REST API developed in Python using FastAPI.
+- **Database**: PostgreSQL for relational data persistence.
 
-## Repositories:
+### Architecture Diagram
 
-- [Frontend](https://github.com/FerRomMu/TecaTrack-Frontend)
-- [Backend](https://github.com/FerRomMu/TecaTrack-Backend)
-
-## Architecture Diagram
-
-_(Empty for now)_
+![Architecture Diagram](./assets/app_architecture_diagram.png)
 
 ---
 
@@ -56,71 +55,60 @@ _(Empty for now)_
 | Component      | Technology              | Reason                                                            |
 | -------------- | ----------------------- | ----------------------------------------------------------------- |
 | Frontend       | React, Vite, TypeScript | Dynamic interface development and strict typing                   |
-| Frontend UI    | Ant Design (AntD)       | Avoid coding CSS and speed up the creation of styles              |
+| Frontend UI    | Ant Design (AntD)       | Rapid styling and component creation                              |
 | Backend        | Python, FastAPI         | Robust business logic and rapid API creation                      |
 | Database       | PostgreSQL, Alembic     | Relational data persistence and secure migrations                 |
 | Infrastructure | PaddleOCR               | Optical Character Recognition (OCR) to extract data from receipts |
 
 ---
 
-## Domain Model
+## Domain Vocabulary
 
 ### Main Entities
 
-- **User**: Represents the person in the system, uniquely identified by their CUIL.
-- **Account**: Represents the bank account linked to the user, which maintains a money balance.
-- **File**: Persisted binary representation of the receipt image uploaded by the user.
+- **User**: Identified by CUIL. Can own multiple accounts and receipts.
+- **Account**: Bank account linked to a user. Stores bank name, balance, and CBU. Tracks transactions.
+- **File**: Binary representation of the uploaded receipt image (`BYTEA` in PostgreSQL).
+- **Receipt**: Processed receipt linking user and file. Tracks OCR status and stored extracted data.
+- **Transaction**: Monetary movement linking sender, receiver, source/destination accounts, and the receipt.
 
-## Domain Diagram
+### Database schema
 
-_(Empty for now)_
+![Database schema](./assets/db-schema.png)
 
 ---
 
 ## Main System Workflow
 
-Usage flow in the current PoC:
-
-1. The frontend system uses the email configured in its `.env` file to query the user (manually added in the DB).
-2. The user uploads an image of a Brunbank receipt.
-3. The system receives the image, persists it, and processes it through the OCR service.
-4. The OCR extracts the data, maps it to a "Receipt", and automatically updates the money in the accounts.
-5. The user views the updated balances (total and individual) on the dashboard.
-
----
-
-## Project Structure
-
-The project is divided into multiple repositories to maintain a clear separation of concerns:
-
-- **TecaTrack (Main)**: Central repository used as a wiki, general project documentation, and technical reports (spikes).
-- **TecaTrack-Frontend**: Contains all the user interface logic, views, components, and API integration.
-- **TecaTrack-Backend**: Contains the REST API, business logic, OCR integration, and interaction with the PostgreSQL database.
+1. The frontend uses the email configured in its `.env` to query the user.
+2. User uploads an image of a Brunbank receipt.
+3. System persists the image and processes it via the OCR service.
+4. OCR extracts data, maps it to a "Receipt", and updates account balances.
+5. User views updated balances on the dashboard.
 
 ---
 
 ## Important Technical Decisions
 
 **Layered Architecture (Backend)**
-
-The backend has been structured using a strict layered model (`routers`, `services`, `repositories`, `schemas`, `models`).  
-**Reason**: To maintain a high separation of concerns, facilitate code maintainability, and allow incremental and atomic development.
-
-**Use of Ant Design (Frontend)**
-
-Ant Design (AntD) was chosen as the UI component library.  
-**Reason**: The only reason for using Ant Design is to avoid writing CSS code manually, allowing the development of styles to be done much faster.
+Structured using `routers`, `services`, `repositories`, `schemas`, and `models` to maintain separation of concerns and allow atomic development.
 
 **Image Persistence (Backend)**
+Persisted using `BYTEA` in PostgreSQL following the KISS principle for the current PoC scope, with potential to migrate to blob storage later.
 
-Images are persisted using the `BYTEA` data type in PostgreSQL.  
-**Reason**: This approach was chosen for its simplicity following the KISS (Keep It Simple, Stupid) principle. While we may migrate to storing a reference to a dedicated blob storage in future versions if the system scales, persisting directly in the database is the simplest option for the current PoC.
+**OCR Engine Optimization**
+PaddleOCR engine is initialized as a singleton at startup to prevent cold-start delays. Receipt processing runs in an async thread pool (`asyncio.to_thread`) to avoid blocking the API event loop.
+
+**Account Matching**
+Accounts are reliably matched by combining the user's CUIL with the CBU and bank name extracted from the receipt.
 
 ---
 
 ## Considerations for Future Development
 
-- Implementation of a real authentication and authorization flow (Login/Registration).
-- Support for receipts from other banks or financial institutions.
-- Voice transaction input: Allow users to upload or record an audio message with the transaction information instead of a receipt image.
-- Expense Reservations: Ability to set money aside for upcoming expenses (configured as one-time entries, even for fixed or monthly installments) so they do not artificially inflate the available total balance.
+- Implementation of a real authentication and authorization flow.
+- Support for receipts from other financial institutions.
+- Voice transaction input for logging transactions without receipts.
+- Expense Reservations: setting money aside for upcoming expenses.
+- Migration to dedicated blob storage (e.g., S3) for files.
+- Full persistence logic for `Receipt` and `Transaction` records beyond balance updates.
