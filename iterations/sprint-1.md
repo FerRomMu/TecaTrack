@@ -30,10 +30,10 @@
 
 ---
 
-### User Stories
+## User Stories
 
 
-#### Create manual transaction
+### Create manual transaction
 
 **Actor:** User  
 **Functionality:** Submit a transaction and update balances automatically  
@@ -47,7 +47,7 @@
 
 ---
 
-#### Bank account creation
+### Bank account creation
 
 **Actor:** User  
 **Functionality:** Add a bank account from dashboard  
@@ -61,7 +61,7 @@
 
 ---
 
-#### View transactions
+### View transactions
 
 **Actor:** User  
 **Functionality:** View recent and full transaction history  
@@ -69,13 +69,13 @@
 
 **Acceptance criteria:**
 - Recent transactions visible
-- "View more" opens modal
+- "View more" adds next page
 - Scroll supported
 - Pagination implemented
 
 ---
 
-#### Transaction filters
+### Transaction filters
 
 **Actor:** User  
 **Functionality:** Filter transaction list  
@@ -113,12 +113,11 @@
 **Acceptance criteria:**
 - Edit button available
 - Modal pre-filled
-- PATCH request updates data
 - Balances recalculate automatically
 
 ---
 
-#### Recurring income
+### Recurring income
 
 **Actor:** User  
 **Functionality:** Schedule recurring income  
@@ -131,7 +130,7 @@
 
 ---
 
-#### Upload receipt income 
+### Upload receipt income 
 
 **Actor:** User  
 **Functionality:** Upload receipt and classify as income
@@ -143,9 +142,9 @@
 
 ---
 
-### Technical Tasks
+## Technical Tasks
 
-#### Manual transaction layout
+### Manual transaction layout
 
 **Actor:** User  
 **Functionality:** Access a dedicated Upload section for manual or receipt-based operations.  
@@ -160,70 +159,65 @@
 
 ---
 
-#### Manual transaction endpoint
+### Manual transaction endpoint
 
 **Actor:** System  
 **Functionality:** Create transactions via API  
 **Value:** Enables persistence and balance updates  
 
 **Acceptance criteria:**
-- POST /transactions exists
 - Balances update automatically
 - UUID returned
 
 ---
 
-#### Bank account endpoint
+### Bank account endpoint
 
 **Actor:** System  
 **Functionality:** Create account  
 **Value:** Enables multi-account support  
 
 **Acceptance criteria:**
-- POST /accounts exists
 - Validates data
 - Returns created account
 
 ---
 
-#### Retrieve transactions
+### Retrieve transactions
 
 **Actor:** System  
 **Functionality:** List transactions with filters  
 **Value:** Supports frontend queries  
 
 **Acceptance criteria:**
-- GET /transactions exists
 - Pagination supported
 - Filters implemented
 
 ---
 
-#### User listing endpoint
+### User listing endpoint
 
 **Actor:** System  
 **Functionality:** List users in dev mode  
 **Value:** Enables testing  
 
 **Acceptance criteria:**
-- GET /user/all restricted
 - Returns basic user data
 
 ---
 
-#### Update transaction endpoint
+### Update transaction endpoint
 
 **Actor:** System  
 **Functionality:** Modify transactions  
 **Value:** Maintains consistency  
 
 **Acceptance criteria:**
-- PATCH /transactions/:id exists
 - Reverses and reapplies balances
 
 ---
 
-#### Receipt classifier
+### Receipt classifier
 
 **Actor:** System  
 **Functionality:** Detect receipt origin  
@@ -231,7 +225,7 @@
 
 ---
 
-#### Lemon processor
+### Lemon processor
 
 **Actor:** System  
 **Functionality:** Handle Lemon receipts  
@@ -239,7 +233,7 @@
 
 ---
 
-#### Default processor
+### Default processor
 
 **Actor:** System  
 **Functionality:** Handle unknown receipts  
@@ -247,7 +241,7 @@
 
 ---
 
-#### Receipt income classification
+### Receipt income classification
 
 **Actor:** System  
 **Functionality:** Detect transaction type  
@@ -255,7 +249,7 @@
 
 ---
 
-#### Recurring income backend
+### Recurring income backend
 
 **Actor:** System  
 **Functionality:** Automate scheduled transactions  
@@ -263,7 +257,7 @@
 
 ---
 
-#### API client refactor
+### API client refactor
 
 **Actor:** Developer  
 **Functionality:** Replace fetch with Axios  
