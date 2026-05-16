@@ -6,6 +6,15 @@ This project follows **Semantic Versioning (SemVer)**.
 
 ---
 
+## [0.2.0] - 2026-05-16 - Sprint 1
+
+### Added
+
+- Iteration summary documented in `iterations/sprint1.md` and `iterations/poc.md`.
+- Diagram architecture based on a specific user story.
+
+---
+
 ## [0.1.0] - 2026-04-24 - DEMO
 
 ### Added
