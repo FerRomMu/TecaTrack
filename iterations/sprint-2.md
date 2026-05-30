@@ -1,8 +1,8 @@
-## Sprint 2 — Iteration Documentation
+# Sprint 2 — Iteration Documentation
 
-### Executive Summary
+## Executive Summary
 
-#### What was added in this iteration
+### What was added in this iteration
 
 - Secure sign-in: users log in with their Google account, and the whole app is protected so each person only reaches their own financial data.
 - Personal categories: users create their own categories and assign them to transactions and recurring incomes, then filter by category.
@@ -11,7 +11,7 @@
 - Recurring income management: users can view, edit, and filter their scheduled incomes in a dedicated section.
 - Dedicated transactions view: transactions now have their own section, separate from the dashboard.
 
-#### Decisions made
+### Decisions made
 
 - Delegated login instead of our own: Google sign-in avoids another password and storing credentials, improving security.
 - Review-before-save for receipts: automatic reading can misinterpret a receipt, so a confirmation step keeps data accurate.
@@ -21,4 +21,4 @@
 
 ---
 
-### User Stories
+## User Stories
