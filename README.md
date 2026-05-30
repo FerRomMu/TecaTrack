@@ -5,7 +5,7 @@
 </p>
 
 **Introduction**  
-TecaTrack is an application for managing receipts and financial transactions using OCR (Optical Character Recognition) technology. It extracts structured information from receipt images and maps it to user accounts, complementing manual and recurring entries. The project has grown beyond its initial Proof of Concept: it now supports authenticated multi-user access, multiple banks, category management, and recurring income.
+TecaTrack is an application for managing receipts and financial transactions using OCR (Optical Character Recognition) technology. It automatically classifies receipt images by bank, extracts structured data with bank-specific processors or an LLM-based fallback, and maps the results to user accounts. The project has grown beyond its initial Proof of Concept: it now supports authenticated multi-user access, multiple banks, category management, manual transaction entry, and recurring income.
 
 ---
 
@@ -26,6 +26,8 @@ This repository is the documentation hub for the TecaTrack ecosystem. Source cod
 - **OCR Processing**: Automatic extraction of key data, with bank-specific processors for Brubank and Lemon plus a Gemini LLM fallback for unrecognized banks.
 - **Receipt Classifier**: CNN-based image classifier (EfficientNet-B0) that identifies the originating bank from a receipt image.
 - **Transaction Management**: Create, list (paginated), edit, and filter transactions linked to user accounts.
+- **Manual Transaction Entry**: Log income, expenses, or transfers without uploading a receipt.
+- **Account Management**: Create and switch between multiple bank accounts.
 - **Categories**: Create categories with icons and assign them to transactions and recurring incomes; filter lists by category.
 - **Recurring Income**: Define, edit, and filter recurring income entries processed automatically by a background worker.
 - **Balance Dashboard**: Visualization of total and individual account balances.
@@ -100,15 +102,86 @@ The system follows a client-server architecture:
 
 Manual transactions and recurring income entries follow the same persistence and balance-update logic without the OCR step.
 
----
+### Component Responsibilities (receipt upload flow)
 
+- AppNavBar.tsx
+  Top-level navigation component that renders the tab bar and routes the user between the main pages of the application (Dashboard, Transactions, Categories, Schedule, Upload, User).
+
+- UploadPage.tsx
+  Page component that hosts the upload section. Renders the tab layout for receipt upload and recurring income, and conditionally mounts UploadReceiptModal when the user triggers the upload
+  action.
+
+- UploadReceiptModal.tsx
+  Modal component that owns the receipt upload interaction. Sends the selected file to the backend, then renders ReceiptConfirmForm with the returned OCR readout so the user can review the data and pick the origin/destination accounts before confirming. Reports success or error back to the user.
+
+- ReceiptConfirmForm.tsx
+  Form that presents the extracted OCR fields for review and correction. Replaces the previous is-income checkbox with from/to account dropdowns, disables future dates, and calls confirmReceipt() to persist the transaction.
+
+- AccountsService (accounts-service.ts)
+  HTTP service layer for all account-related operations. Builds the multipart/form-data payload for uploadReceipt() (which returns the OCR readout) and exposes confirmReceipt() for the second phase. Delegates the actual HTTP call to apiClient and also handles account creation and balances.
+
+- apiClient.ts (Axios — third-party)
+  Centralized Axios instance that is the single HTTP exit point of the frontend. Attaches the JWT bearer token, and a response interceptor maps backend error codes to typed ApiError objects with i18n translation.
+
+- receipt_router.py — POST /receipts/upload-receipt and POST /receipts/{id}/confirm
+  FastAPI router for the two-phase flow. The identity is derived from the authenticated user's JWT (no user_id in the request body); upload receives the file and returns the OCR readout, while confirm receives the reviewed data. Resolves service dependencies via injection and delegates the use case to ReceiptService.
+
+- ReceiptService (receipt_service.py)
+  Orchestrator of the receipt use case, split into process_upload and confirm_receipt. process_upload runs image conversion, bank classification, and OCR extraction, then persists the File and Receipt (in a WAITING_CONFIRMATION state) and returns the readout. confirm_receipt validates the reviewed data, creates the transaction, and delegates balance updates to the domain services. Guarantees that File and Receipt are persisted even if extraction fails.
+
+- TransactionService (transaction_service.py)
+  Handles the business logic for creating a transaction record and applying the resulting balance delta to the source and destination accounts. Enforces future-date validation and localizes timestamps to the user's timezone. Delegates persistence to TransactionRepository.
+
+- AccountService (account_service.py)
+  Resolves and validates the accounts involved in a transaction by matching the user's CUIL with the CBU and bank name extracted from the receipt. Provides concurrency-safe balance update operations.
+
+- ReceiptProcessor (receipt_classifier.py)
+  Selects and executes the appropriate bank-specific parsing strategy after the classifier determines the bank. Applies the processor's rules to the raw OCR output and returns a structured OCRResponse.
+
+- GeminiClient (gemini_client.py)
+  Implementation of the LLMClient interface that sends a prompt to the Google Gemini API. Used exclusively by the Default processor as a fallback when no bank-specific processor matches the classified receipt.
+
+- ReceiptClassifier (receipt_classifier.py)
+  Preprocesses the raw image bytes and passes them to ClassifierEngine to obtain a bank prediction. Returns the corresponding ReceiptProcessor instance to use for structured data extraction.
+
+- OCRProcessor (ocr_processor.py)
+  Drives the raw text extraction using OCREngine and forwards the result to the active ReceiptProcessor for structured parsing. Returns both the structured fields and the raw OCR text for storage.
+
+- ClassifierEngine — EfficientNet-B0 fine-tuned (third-party)
+  Thread-safe lazy singleton that loads and caches the fine-tuned EfficientNet-B0 model in memory. Exposes get() returning the model and class map, ensuring the model is initialized only once across all requests.
+
+- OCREngine — PaddleOCR (third-party)
+  Thread-safe lazy singleton wrapping PaddleOCR, configured with Spanish language and text-orientation detection. Runs inference in a thread pool via asyncio.to_thread to avoid blocking the async event loop.
+
+- FileRepository (file_repository.py)
+  Accesses the files table and persists the raw BYTEA image data. Decoupled from receipt processing so the binary artifact is stored regardless of whether OCR succeeds.
+
+- ReceiptRepository (receipt_repository.py)
+  Accesses the receipts table. Persists the receipt record with its OCR status, raw extracted text, is_income flag, and confirmation timestamp. Provides update() to reflect the final processing state after extraction and confirmation complete.
+
+- TransactionRepository (transaction_repository.py)
+  Accesses the transactions table. Persists new transaction records and supports updates to existing ones, keeping monetary movements linked to the accounts and receipts they reference.
+
+- AccountRepository (account_repository.py)
+  Accesses the accounts table. Supports account creation, retrieval by CBU, and balance updates used by AccountService during transaction processing.
+
+- transactional_session() / database.py (SQLAlchemy — third-party)
+  Async context manager over SQLAlchemy's async_sessionmaker. Wraps all repository operations in a single database transaction with automatic commit on success and rollback on failure. It is the sole point of contact with PostgreSQL.
+
+- Google Gemini API — gemini-3.1-flash-lite (third-party)
+  External LLM service invoked by GeminiClient to extract structured fields from receipts that do not match a known bank processor. Receives a text prompt with the raw OCR output and returns a structured JSON response.
+
+- PostgreSQL — users, accounts, categories, files, receipts, transactions, recurring_incomes (third-party)
+  Relational database that persists all application state. Accessed exclusively through transactional_session() to ensure ACID guarantees across all write operations.
+
+---
 ## Important Technical Decisions
 
 **Layered Architecture (Backend)**
 Structured using `routers`, `services`, `repositories`, `schemas`, and `models`, with an `infrastructure` layer for OCR, the classifier, and the LLM client, to maintain separation of concerns and allow atomic development.
 
 **Image Persistence (Backend)**
-Persisted using `BYTEA` in PostgreSQL following the KISS principle for the current scope, with potential to migrate to blob storage later.
+Persisted using `BYTEA` in PostgreSQL following the KISS principle for the current scope, with potential to migrate to dedicated blob storage later.
 
 **OCR Engine Optimization**
 The PaddleOCR engine is initialized as a singleton at startup to prevent cold-start delays. Receipt processing runs in an async thread pool (`asyncio.to_thread`) to avoid blocking the API event loop.
@@ -136,7 +209,7 @@ Accounts are reliably matched by combining the user's CUIL with the CBU and bank
 ## Considerations for Future Development
 
 - Voice transaction input for logging transactions without receipts.
-- Expense Reservations: setting money aside for upcoming expenses.
+- Expense Reservations: setting money aside for upcoming expenses with future-spend visibility.
 - Additional bank-specific OCR processors beyond Brubank and Lemon.
 - Migration to dedicated blob storage (e.g., S3) for files.
 - Multi-language support (currently Spanish/Argentina only).

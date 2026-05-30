@@ -27,9 +27,14 @@ This project follows **Semantic Versioning (SemVer)**.
 - Architecture section updated to describe the backend infrastructure layer (OCR, classifier, LLM) and background workers.
 - Data model (`doc/poc-datamodel.dbml`) updated with the categories table, receipt confirmation fields, and timezone-aware transaction columns.
 
-### Notes
+---
 
-- The `0.2.0` documentation release was skipped; this entry brings the documentation hub from `0.1.0` directly to the `0.3.0` ecosystem state.
+## [0.2.0] - 2026-05-16 - Sprint 1
+
+### Added
+
+- Iteration summary documented in `iterations/sprint-1.md` and `iterations/poc.md`.
+- Diagram architecture based on a specific user story.
 
 ---
 
