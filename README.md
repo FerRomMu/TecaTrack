@@ -197,9 +197,6 @@ Reading a receipt can take time, so extraction is decoupled from upload: `POST /
 **OCR Engine Optimization**
 Within the OCR microservice, the PaddleOCR and classifier engines are initialized as singletons at startup to prevent cold-start delays, and inference runs in an async thread pool (`asyncio.to_thread`) to avoid blocking the service's event loop.
 
-**Chart Library Selection**
-Before building the statistics views, several charting libraries were compared on compatibility, ease of building the required charts, and visual integration; `@ant-design/charts` was chosen for its native fit with the existing Ant Design UI.
-
 **Account Matching**
 Accounts are reliably matched by combining the user's CUIL with the CBU and bank name extracted from the receipt.
 
@@ -223,11 +220,3 @@ Timestamps are stored in UTC; the frontend sends ISO 8601 dates with an explicit
 
 **User-Scoped Categories**
 Categories belong to individual users and behave identically across transactions and recurring movements; a movement can only reference a category owned by the same user.
-
----
-
-## Considerations for Future Development
-
-- Support for receipts from additional financial institutions beyond Brubank and Lemon.
-- Voice transaction input for logging transactions without receipts.
-- Expense Reservations: setting money aside for upcoming expenses with future-spend visibility.
