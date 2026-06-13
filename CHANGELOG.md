@@ -6,6 +6,24 @@ This project follows **Semantic Versioning (SemVer)**.
 
 ---
 
+## [0.4.0] - 2026-06-12 - Sprint 3
+
+### Added
+
+- Documentation for the OCR microservice (`apps/ocr/`) and the `OCR_SERVICE_URL` environment variable.
+- Documentation for the asynchronous receipt pipeline (`202 Accepted`, background processing, `PENDING` state) and the receipt list with per-receipt status and inline confirmation.
+- Documentation for movement statistics (time series, rankings by category and by bank) and the `@ant-design/charts` dependency.
+- Sprint 3 iteration report (`iterations/sprint-3.md`).
+
+### Changed
+
+- Renamed the Recurring Income domain to Recurring Movements (income + expenses), documenting `movement_type`, `is_active`, `expires_at`, and deactivation.
+- README updated: features, environment variables, technologies table, domain vocabulary, upload workflow, and component responsibilities now reflect the OCR microservice split and the async receipt flow.
+- Important Technical Decisions extended with OCR-as-a-microservice, asynchronous receipt processing, recurring-movement generalization, and chart-library selection.
+- Database schema diagram and architecture diagram regenerated for the OCR microservice split and the `recurring_movements` rename.
+
+---
+
 ## [0.3.0] - 2026-05-29 - Sprint 2
 
 ### Added
