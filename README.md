@@ -73,13 +73,13 @@ This repository is the documentation hub for the TecaTrack ecosystem. Source cod
 
 ### Main Entities
 
-- **User**: Identified by email and a unique CUIL. Authenticated via Google. Can own multiple accounts, receipts, and categories.
-- **Account**: Bank account linked to a user. Stores bank name, balance, and CBU. Tracks transactions.
-- **Category**: User-owned label with a name and an icon (from a fixed icon set). Optionally assigned to transactions and recurring movements for organization and filtering.
-- **File**: Binary representation of the uploaded receipt image (`BYTEA` in PostgreSQL).
-- **Receipt**: Processed receipt linking user and file. Tracks its OCR lifecycle status (`PENDING` while the OCR microservice is still processing it, then `WAITING_CONFIRMATION`, `PROCESSED`, or `FAILED`), stores the raw OCR text and the structured `extracted_data` (JSONB), carries an `is_income` flag, and records `confirmed_at` once the user confirms.
-- **Transaction**: Monetary movement linking sender, receiver, source/destination accounts, and optionally a receipt, a category, and a recurring movement. Records timezone-aware date fields (`transaction_date`, `transaction_date_source`, `uploaded_at`, `user_timezone`).
-- **RecurringMovement**: Scheduled income or expense entry (`movement_type` = INCOME/EXPENSE) that triggers automatic transaction registration on a defined period (weekly, biweekly, or monthly). Has an `is_active` flag (for deactivation), an optional `expires_at` date after which it stops executing, and an optional description and category.
+- **User**: A person using the app, identified by email and a unique CUIL. Signs in with Google and can own multiple accounts, receipts, and categories.
+- **Account**: A bank account belonging to a user, holding its bank, balance, and account number (CBU). Transactions are recorded against it.
+- **Category**: A user-owned label with a name and an icon, optionally assigned to transactions and recurring movements to organize and filter them.
+- **File**: The uploaded receipt image kept by the system.
+- **Receipt**: An uploaded receipt linked to a user and its image. It moves through a processing lifecycle (pending, waiting for confirmation, processed, or failed), keeps the data read from the image, notes whether it represents income, and records when the user confirmed it.
+- **Transaction**: A monetary movement between a sender and a receiver and their source/destination accounts, optionally tied to a receipt, a category, and a recurring movement, dated in the user's timezone.
+- **RecurringMovement**: A scheduled income or expense that automatically registers transactions on a defined period (weekly, biweekly, or monthly). It can be deactivated and may have an optional expiration date, description, and category.
 
 ## Database schema
 
