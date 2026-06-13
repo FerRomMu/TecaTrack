@@ -136,21 +136,19 @@ This repository is the documentation hub for the TecaTrack ecosystem. Source cod
   Resolves and validates the accounts involved in a transaction by matching the user's CUIL with the CBU and bank name extracted from the receipt. Provides concurrency-safe balance update operations.
 
 - ReceiptClassifier (infrastructure/classifier/receipt_classifier.py) — main API
-  Async HTTP adapter that forwards the raw image bytes to the OCR microservice and returns the predicted bank. No longer loads any model in the main app.
+  Async HTTP adapter. Calls the OCR microservice's POST /classify to get the predicted bank type, then maps it to the matching bank-specific ReceiptProcessor (Brubank, Lemon, or the LLM-based Default). Falls back to the Default processor on any failure.
 
 - OCRProcessor (infrastructure/ocr/ocr_processor.py) — main API
-  Async HTTP adapter that sends the receipt image to the OCR microservice and returns the structured fields together with the raw OCR text for storage. No longer runs OCR inference in the main app.
+  Async HTTP adapter. Calls the OCR microservice's POST /process to obtain the raw OCR text and detected blocks, then runs the selected ReceiptProcessor locally to produce the structured OCRResponse. Returns both the structured fields and the raw text for storage.
 
-The following components live in the standalone OCR microservice (`apps/ocr/`):
+- ReceiptProcessor + bank processors (infrastructure/ocr/processors/) — main API
+  Bank-specific parsing strategies (Brubank, Lemon, Default). Apply their rules to the raw OCR text returned by the microservice and produce a structured OCRResponse. The Default processor delegates to GeminiClient.
 
-- ocr_router.py / OcrService (apps/ocr) — OCR microservice
-  FastAPI router and service that receive an image over HTTP, run bank classification and OCR extraction, and return the structured OCRResponse plus raw text to the main API.
+- GeminiClient (infrastructure/llm/gemini_client.py) — main API
+  Implementation of the LLMClient interface that sends a prompt to the Google Gemini API. Used exclusively by the Default processor when no bank-specific processor matches the classified receipt.
 
-- ReceiptProcessor (apps/ocr) — OCR microservice
-  Selects and executes the appropriate bank-specific parsing strategy after the classifier determines the bank. Applies the processor's rules to the raw OCR output and returns a structured OCRResponse.
-
-- GeminiClient (apps/ocr) — OCR microservice
-  Implementation of the LLMClient interface that sends a prompt to the Google Gemini API. Used exclusively by the Default processor as a fallback when no bank-specific processor matches the classified receipt.
+- ocr_router.py / OCRAppService (apps/ocr) — OCR microservice
+  FastAPI service exposing POST /classify (runs the CNN, returns the predicted bank type) and POST /process (runs PaddleOCR, returns the raw text and detected text blocks). Performs only these two ML steps — no bank-specific parsing or LLM.
 
 - ClassifierEngine — EfficientNet-B0 fine-tuned (third-party) — OCR microservice
   Thread-safe lazy singleton that loads and caches the fine-tuned EfficientNet-B0 model in memory. Exposes get() returning the model and class map, ensuring the model is initialized only once across all requests. Loaded in the OCR microservice lifespan, not the main app.
