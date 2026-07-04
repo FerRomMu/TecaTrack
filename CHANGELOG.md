@@ -6,6 +6,27 @@ This project follows **Semantic Versioning (SemVer)**.
 
 ---
 
+## [0.5.0] - 2026-07-04 - Sprint 4
+
+### Added
+
+- Documentation for voice transaction entry: the standalone STT microservice (`apps/stt/`), the asynchronous voice pipeline (transcription + LLM transfer extraction), and the review/confirm flow that reuses the receipt pattern.
+- Documentation for money reservations and available balance (real balance − reserved), including the reservation lifecycle and the amount tied to the linked future expense.
+- Documentation for future-expense projections (table grouped by period and an evolution chart over a chosen window and granularity).
+- New domain entities documented: Reservation and VoiceUpload.
+- `STT_SERVICE_URL` and the optional STT model environment variables.
+- Sprint 4 iteration report (`iterations/sprint-4.md`).
+
+### Changed
+
+- Introduction and Features updated with voice entry, reservations with available balance, and future-expense projections.
+- Technologies table extended with the faster-whisper STT microservice; Gemini noted for voice transfer extraction as well as receipt fallback.
+- Account entity now documents the available balance; RecurringMovement notes expense projection and reservation funding.
+- Important Technical Decisions extended: STT as an independent microservice, asynchronous voice processing without automatic transactions, reservations without moving the real balance, the reservation amount tied to the future expense, future-expense projections, the frontend testing stack, and the WCAG 2.1 AA accessibility pass.
+- Database schema diagram updated with the `voice_uploads` and `reservations` tables.
+
+---
+
 ## [0.4.0] - 2026-06-12 - Sprint 3
 
 ### Added
