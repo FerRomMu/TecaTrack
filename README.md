@@ -7,6 +7,9 @@
 **Introduction**  
 TecaTrack is an application for managing receipts and financial transactions using OCR (Optical Character Recognition) technology. It automatically classifies receipt images by bank, extracts structured data using bank-specific processors or an LLM-based fallback, and maps the results to the authenticated user's accounts. Receipt processing runs asynchronously in a dedicated OCR microservice, so uploads never block the user. Access is secured with Google OAuth 2.0, and users can organize their movements with personal categories. It also supports manual transaction entry, recurring income and expense scheduling, and visual statistics of movements over time. Transactions can additionally be registered by voice — a recorded audio note is transcribed and parsed into a suggested transfer for review — and users can reserve money for future expenses to see how much is really available in each account, and project their upcoming recurring expenses over time.
 
+**Demo Video**  
+[Watch a demo of TecaTrack](https://youtu.be/yMk_pGuhN9c)
+
 ---
 
 ### Repositories
