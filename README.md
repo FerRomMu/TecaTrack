@@ -5,7 +5,7 @@
 </p>
 
 **Introduction**  
-TecaTrack is an application for managing receipts and financial transactions using OCR (Optical Character Recognition) technology. It automatically classifies receipt images by bank, extracts structured data using bank-specific processors or an LLM-based fallback, and maps the results to the authenticated user's accounts. Receipt processing runs asynchronously in a dedicated OCR microservice, so uploads never block the user. Access is secured with Google OAuth 2.0, and users can organize their movements with personal categories. It also supports manual transaction entry, recurring income and expense scheduling, and visual statistics of movements over time.
+TecaTrack is an application for managing receipts and financial transactions using OCR (Optical Character Recognition) technology. It automatically classifies receipt images by bank, extracts structured data using bank-specific processors or an LLM-based fallback, and maps the results to the authenticated user's accounts. Receipt processing runs asynchronously in a dedicated OCR microservice, so uploads never block the user. Access is secured with Google OAuth 2.0, and users can organize their movements with personal categories. It also supports manual transaction entry, recurring income and expense scheduling, and visual statistics of movements over time. Transactions can additionally be registered by voice — a recorded audio note is transcribed and parsed into a suggested transfer for review — and users can reserve money for future expenses to see how much is really available in each account, and project their upcoming recurring expenses over time.
 
 ---
 
@@ -32,7 +32,10 @@ This repository is the documentation hub for the TecaTrack ecosystem. Source cod
 - **Movement Statistics**: Statistics tab with a line chart of income vs. expenses over time (with transaction count on hover) and rankings by category and by bank as horizontal bar charts, all driven by date-range, granularity, bank, and category filters.
 - **Categories**: Create personal categories with a name and icon, assign them to transactions and recurring movements, and filter by them.
 - **Manual Transaction Entry**: Log income, expenses, or transfers without uploading a receipt.
+- **Voice Transaction Entry**: Register a transaction by speaking instead of filling a form. A recorded audio note is transcribed by a speech-to-text engine and parsed by an LLM into a suggested transfer; processing runs in the background and the result is reviewed and confirmed before anything is saved, just like receipts.
 - **Recurring Movements**: Schedule periodic income and expense entries that are registered automatically by a background worker. View, edit, filter, and deactivate them in a dedicated section, with an optional expiration date after which they stop running.
+- **Money Reservations & Available Balance**: Set money aside for a future expense — funded by an account and/or a future income — without changing the real balance. Each account shows its available balance (real minus reserved), so it is clear how much can be spent without touching what has been reserved. Reservations can be created, edited, and cancelled, and close automatically when the funding income or the linked expense runs.
+- **Future-Expense Projections**: Anticipate upcoming spending with a projection of active recurring expenses over a chosen period and granularity, shown as a table grouped by period and an evolution line chart.
 - **Timezone-Aware Dates**: Transactions are stored in UTC and shown in the user's local timezone; future dates are rejected by the backend.
 - **Account Management**: Create and switch between multiple bank accounts.
 
@@ -48,6 +51,8 @@ This repository is the documentation hub for the TecaTrack ecosystem. Source cod
   - `FRONTEND_URL` — used to redirect back to the frontend after the OAuth callback.
   - `JWT_SECRET` — signing key for access/pending tokens (must be at least 32 characters).
   - `OCR_SERVICE_URL` — base URL of the OCR microservice (default `http://localhost:8001`), validated at startup.
+  - `STT_SERVICE_URL` — base URL of the STT microservice (default `http://localhost:8002`).
+  - `STT_MODEL_SIZE`, `STT_DEVICE`, `STT_COMPUTE_TYPE`, `STT_LANGUAGE` — optional speech-to-text model settings (defaults: `small` / `cpu` / `int8` / `es`).
 
 ---
 
@@ -65,7 +70,8 @@ This repository is the documentation hub for the TecaTrack ecosystem. Source cod
 | Database       | PostgreSQL, Alembic     | Relational data persistence and secure migrations                 |
 | OCR Microservice | PaddleOCR             | Optical Character Recognition (OCR) to extract data from receipts (runs in the standalone OCR service) |
 | OCR Microservice | EfficientNet-B0 (CNN) | Identifies the originating bank from a receipt image (runs in the standalone OCR service) |
-| Infrastructure | Google Gemini (LLM)     | LLM-based receipt data extraction as a fallback processor         |
+| STT Microservice | faster-whisper        | Speech-to-text transcription of voice notes (runs in the standalone STT service) |
+| Infrastructure | Google Gemini (LLM)     | LLM-based receipt data extraction (fallback processor) and voice transfer extraction |
 
 ---
 
@@ -80,6 +86,8 @@ This repository is the documentation hub for the TecaTrack ecosystem. Source cod
 - **Receipt**: An uploaded receipt linked to a user and its image. It moves through a processing lifecycle (pending, waiting for confirmation, processed, or failed), keeps the data read from the image, notes whether it represents income, and records when the user confirmed it.
 - **Transaction**: A monetary movement between a sender and a receiver and their source/destination accounts, optionally tied to a receipt, a category, and a recurring movement, dated in the user's timezone.
 - **RecurringMovement**: A scheduled income or expense that automatically registers transactions on a defined period (weekly, biweekly, or monthly). It can be deactivated and may have an optional expiration date, description, and category.
+- **Reservation**: Money a user sets aside for a specific future expense (a recurring movement), charged against one of their accounts and optionally funded by a future income. It records its funding source (account, income, or both), how many iterations of the expense it covers, and its status (active, cancelled, or fulfilled).
+- **VoiceUpload**: A recorded audio note uploaded by a user to register a transaction by voice, linked to the user and its audio file. It moves through a processing lifecycle (pending, waiting for confirmation, processed, or failed), keeps the transcription and the transfer data extracted from it, and links to the transaction once confirmed.
 
 ## Database schema
 
@@ -218,3 +226,24 @@ Timestamps are stored in UTC; the frontend sends ISO 8601 dates with an explicit
 
 **User-Scoped Categories**
 Categories belong to individual users and behave identically across transactions and recurring movements; a movement can only reference a category owned by the same user.
+
+**Speech-to-Text as an Independent Microservice**
+Voice transcription runs in a standalone faster-whisper service (`apps/stt/`) that the main API calls over HTTP (`STT_SERVICE_URL`), keeping the heavy STT model out of the main app — mirroring the OCR microservice split. A spike compared alternatives (Whisper, faster-whisper, and hosted providers), favoring open or openly consumable models to avoid overloading local machines' RAM.
+
+**Asynchronous Voice Processing Without Automatic Transactions**
+Like receipts, audio is processed in the background (transcription plus LLM extraction) and never creates a transaction on its own; the result always waits for the user to review and confirm. The confirmation flow reuses the receipt pattern (backend polling plus a validation modal with pre-filled data) for a consistent experience.
+
+**Reservations Without Moving the Real Balance**
+Instead of debiting the balance, reservations introduce an available balance (real balance − reserved). The real balance never changes, so the user clearly sees how much can be spent without touching what has already been set aside. An account-funded reservation reduces availability from creation; an income-funded one only affects it once the income executes.
+
+**Reservation Amount Tied to the Future Expense**
+A reservation's amount is not entered by hand; it is computed as N × the amount of the linked future expense, keeping the reservation consistent with the plan and avoiding arbitrary figures.
+
+**Future-Expense Projections**
+Active expense recurring movements are projected forward over a time window and granularity so users can anticipate upcoming spending, presented as a table grouped by period and an evolution chart that shares the transaction-statistics view's range and granularity controls.
+
+**Frontend Testing Stack**
+The frontend adopted Vitest + React Testing Library + MSW as its testing base, with shared conventions (AAA structure, a render helper with providers, module-level context mocks, and network interception via MSW) so coverage can grow consistently.
+
+**Accessibility (WCAG 2.1 AA)**
+The main pages were brought toward WCAG 2.1 AA — color contrast, semantic HTML and landmarks, form accessibility, and keyboard operability — centralizing color fixes in the theme tokens, with axe-core and Lighthouse audits during development.
