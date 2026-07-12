@@ -104,6 +104,12 @@ This repository is the documentation hub for the TecaTrack ecosystem. Source cod
 5. The user sees the receipt status update in the receipt list and opens the pending receipt to review and edit the extracted fields, then confirms.
 6. On confirmation, the system creates the transaction, updates the affected account balances, and marks the receipt `PROCESSED`.
 
+### PoC Architecture Diagram
+
+The initial proof of concept validated the core idea with a single monolithic FastAPI backend — no microservice split, no bank classification, and no asynchronous processing. The client uploaded a receipt image directly to a Receipt service, which ran PaddleOCR synchronously (preprocess → parse) and stored the raw image as BYTEA in PostgreSQL alongside user and account data. There was no bank-specific parsing, no LLM fallback, and no confirmation step — a simpler baseline that later evolved into the two-phase, microservice-based MVP architecture described above.
+
+![PoC Architecture Diagram](./assets/poc_architecture_diagram.png)
+
 ### Architecture Diagram
 
 ![Architecture Diagram](./assets/app_architecture_diagram.png)
